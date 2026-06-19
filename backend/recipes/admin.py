@@ -20,6 +20,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'id', 'short_title', 'author', 'cooking_time', 'created',
         'favorites_count'
     )
+    list_display_links = ('short_title',)
     list_filter = ('tags', 'author')
     search_fields = ('name', 'author__username', 'author__email')
     readonly_fields = ('favorites_count',)
@@ -36,6 +37,7 @@ class RecipeAdmin(admin.ModelAdmin):
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'slug')
+    list_display_links = ('name',)
     search_fields = ('name',)
     prepopulated_fields = {'slug': ('name',)}
 
@@ -43,4 +45,5 @@ class TagAdmin(admin.ModelAdmin):
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'measurement_unit')
+    list_display_links = ('name',)
     search_fields = ('name',)

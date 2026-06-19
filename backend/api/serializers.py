@@ -95,6 +95,12 @@ class TagSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class RecipeShortSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
 class RecipeSerializer(serializers.ModelSerializer):
     tags = serializers.SerializerMethodField()
     author = UserSerializer(read_only=True)
@@ -169,38 +175,46 @@ class RecipeSerializer(serializers.ModelSerializer):
                     f'Теги с id {list(non_existing_tags)} не существуют.'
                 ]}
             )
-        seen_ingredients = set()
-        for ing_data in ingredients_data:
-            ingredient_id = ing_data.get('id')
-            if ingredient_id in seen_ingredients:
+        ingredient_ids = []
+        for ingredient_data in ingredients_data:
+            ingredient_id = ingredient_data.get('id')
+            amount = ingredient_data.get('amount')
+            if not ingredient_id:
                 raise serializers.ValidationError(
-                    {'ingredients': ['Ингредиенты не должны повторяться.']}
+                    {'ingredients': [
+                        'Для каждого ингредиента требуется поле id.'
+                    ]}
                 )
-            seen_ingredients.add(ingredient_id)
+            if amount is None:
+                raise serializers.ValidationError(
+                    {'ingredients': [
+                        'Для каждого ингредиента требуется поле amount.'
+                    ]}
+                )
+            ingredient_ids.append(ingredient_id)
+        if len(ingredient_ids) != len(set(ingredient_ids)):
+            raise serializers.ValidationError(
+                {'ingredients': ['Ингредиенты не должны повторяться.']}
+            )
+        existing_ingredients = set(
+            Ingredient.objects.filter(id__in=ingredient_ids)
+            .values_list('id', flat=True)
+        )
+        non_existing_ingredients = set(ingredient_ids) - existing_ingredients
+        if non_existing_ingredients:
+            raise serializers.ValidationError(
+                {
+                    'ingredients': [
+                        f'Ингредиенты с id {list(non_existing_ingredients)} '
+                        'не существуют.'
+                    ]
+                }
+            )
 
     def _create_recipe_ingredient(self, recipe, ingredient_data):
         ingredient_id = ingredient_data.get('id')
         amount = ingredient_data.get('amount')
-        if not ingredient_id:
-            raise serializers.ValidationError(
-                {'ingredients': [
-                    'Для каждого ингредиента требуется поле id.'
-                ]}
-            )
-        if not amount:
-            raise serializers.ValidationError(
-                {'ingredients': [
-                    'Для каждого ингредиента требуется поле amount.'
-                ]}
-            )
-        try:
-            ingredient = Ingredient.objects.get(id=ingredient_id)
-        except Ingredient.DoesNotExist:
-            raise serializers.ValidationError(
-                {'ingredients': [
-                    f'Ингредиент с id {ingredient_id} не существует.'
-                ]}
-            )
+        ingredient = Ingredient.objects.get(id=ingredient_id)
         RecipeIngredient.objects.create(
             recipe=recipe,
             ingredient=ingredient,
@@ -260,9 +274,3 @@ class UserWithRecipesSerializer(UserSerializer):
         return RecipeShortSerializer(
             recipes, many=True, context={'request': request}
         ).data
-
-
-class RecipeShortSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
