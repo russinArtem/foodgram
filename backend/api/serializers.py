@@ -191,6 +191,20 @@ class RecipeSerializer(serializers.ModelSerializer):
                         'Для каждого ингредиента требуется поле amount.'
                     ]}
                 )
+            try:
+                amount = int(amount)
+            except (TypeError, ValueError):
+                raise serializers.ValidationError(
+                    {'ingredients': [
+                        'Количество ингредиента должно быть числом.'
+                    ]}
+                )
+            if amount < 1:
+                raise serializers.ValidationError(
+                    {'ingredients': [
+                        'Количество ингредиента должно быть больше 0.'
+                    ]}
+                )
             ingredient_ids.append(ingredient_id)
         if len(ingredient_ids) != len(set(ingredient_ids)):
             raise serializers.ValidationError(
@@ -203,17 +217,15 @@ class RecipeSerializer(serializers.ModelSerializer):
         non_existing_ingredients = set(ingredient_ids) - existing_ingredients
         if non_existing_ingredients:
             raise serializers.ValidationError(
-                {
-                    'ingredients': [
-                        f'Ингредиенты с id {list(non_existing_ingredients)} '
-                        'не существуют.'
-                    ]
-                }
+                {'ingredients': [
+                    f'Ингредиенты с id {list(non_existing_ingredients)} '
+                    'не существуют.'
+                ]}
             )
 
     def _create_recipe_ingredient(self, recipe, ingredient_data):
         ingredient_id = ingredient_data.get('id')
-        amount = ingredient_data.get('amount')
+        amount = int(ingredient_data.get('amount'))
         ingredient = Ingredient.objects.get(id=ingredient_id)
         RecipeIngredient.objects.create(
             recipe=recipe,
