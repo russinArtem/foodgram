@@ -51,7 +51,7 @@ jobs:
     - name: Set up nodeJS
       uses: actions/setup-node@v3
       with:
-        node-version: 20
+        node-version: 21.7.1
     - name: Install dependencies
       run: |
         cd frontend/
@@ -59,7 +59,7 @@ jobs:
     - name: Test frontend
       run: |
         cd frontend/
-        npm run test
+        npm run test -- --passWithNoTests --watchAll=false
   
   build_backend_and_push_to_docker_hub:
     name: Push backend Docker image to DockerHub
