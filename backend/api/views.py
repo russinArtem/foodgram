@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser.serializers import UserCreateSerializer
+from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -8,12 +10,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from api.serializers import (
-    Base64ImageField,
     IngredientSerializer,
-    RecipeSerializer,
+    RecipeReadSerializer,
     RecipeShortSerializer,
+    RecipeWriteSerializer,
     TagSerializer,
-    UserRegistrationSerializer,
     UserSerializer,
     UserWithRecipesSerializer,
 )
@@ -43,7 +44,7 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (AllowAny,)
 
     def create(self, request, *args, **kwargs):
-        serializer = UserRegistrationSerializer(data=request.data)
+        serializer = UserCreateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -185,8 +186,13 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    serializer_class = RecipeSerializer
+    serializer_class = RecipeReadSerializer
     pagination_class = CustomPagination
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return RecipeWriteSerializer
+        return RecipeReadSerializer
 
     def get_queryset(self):
         queryset = Recipe.objects.all()
