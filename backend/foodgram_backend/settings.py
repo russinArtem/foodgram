@@ -23,7 +23,6 @@ INSTALLED_APPS = [
     'djoser',
     'recipes.apps.RecipesConfig',
     'api.apps.ApiConfig',
-    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
@@ -122,7 +121,7 @@ DJOSER = {
     'LOGIN_FIELD': 'email',
 }
 
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'recipes.User'
 
 CSRF_TRUSTED_ORIGINS = [
     'https://foodgramartrus.servehttp.com',

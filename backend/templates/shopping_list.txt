@@ -1,0 +1,15 @@
+Список покупок
+Дата: {{ date }}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ИНГРЕДИЕНТЫ:
+{% for ingredient in ingredients %}
+{{ ingredient.index }}. {{ ingredient.name }} ({{ ingredient.unit }}) — {{ ingredient.amount }}
+{% endfor %}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+РЕЦЕПТЫ:
+{% for recipe in recipes %}
+• {{ recipe.name }} (автор: {{ recipe.author }})
+  Теги: {{ recipe.tags|join:", " }}
+{% endfor %}

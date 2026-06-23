@@ -9,9 +9,9 @@ from recipes.models import (
     Recipe,
     RecipeIngredient,
     ShoppingCart,
+    Subscription,
     Tag,
 )
-from users.models import Subscription
 
 MIN_COOKING_TIME = 1
 
@@ -39,7 +39,7 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(DjoserUserSerializer):
-    avatar = serializers.ImageField(source='profile.avatar', required=False)
+    avatar = serializers.ImageField(required=False)
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta(DjoserUserSerializer.Meta):
