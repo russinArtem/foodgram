@@ -3,7 +3,7 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet as DjoserUserViewSet
+# from djoser.views import UserViewSet as DjoserUserViewSet
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
@@ -18,6 +18,7 @@ from api.serializers import (
     RecipeShortSerializer,
     RecipeWriteSerializer,
     TagSerializer,
+    UserSerializer,
     UserWithRecipesSerializer,
 )
 from recipes.models import (
@@ -37,7 +38,9 @@ class DefaultPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 
-class UserViewSet(DjoserUserViewSet):
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
     pagination_class = DefaultPagination
     permission_classes = (AllowAny,)
 
