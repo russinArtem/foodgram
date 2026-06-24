@@ -15,7 +15,7 @@ class User(AbstractUser):
         unique=True,
         validators=[
             RegexValidator(
-                regex=r'^[\w.@+-]+\z',
+                regex=r'^[\w.@+-]+\Z',
                 message=(
                     'Недопустимый username. '
                     'Разрешены буквы, цифры и . @ + - _'
