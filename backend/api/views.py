@@ -39,7 +39,6 @@ class DefaultPagination(PageNumberPagination):
 
 
 class UserViewSet(DjoserUserViewSet):
-    serializer_class = UserSerializer
     pagination_class = DefaultPagination
     permission_classes = (AllowAny,)
 
