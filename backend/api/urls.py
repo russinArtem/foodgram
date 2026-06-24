@@ -5,7 +5,7 @@ from api.views import IngredientViewSet, RecipeViewSet, TagViewSet, UserViewSet
 
 v1_router = DefaultRouter()
 v1_router.register(r'recipes', RecipeViewSet, basename='recipes')
-v1_router.register(r'users', UserViewSet, basename='users')
+v1_router.register(r'users', UserViewSet, basename='user')
 v1_router.register(r'tags', TagViewSet, basename='tags')
 v1_router.register(r'ingredients', IngredientViewSet, basename='ingredients')
 
