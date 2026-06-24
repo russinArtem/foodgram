@@ -66,7 +66,6 @@ class UserViewSet(DjoserUserViewSet):
                 user.avatar = None
                 user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
         image_field = Base64ImageField()
         avatar_data = request.data.get('avatar')
         if not avatar_data:
