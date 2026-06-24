@@ -1,4 +1,7 @@
 from django.contrib.auth import get_user_model
+from djoser.serializers import (
+    UserCreateSerializer as DjoserUserCreateSerializer,
+)
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
@@ -38,6 +41,14 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
+class UserCreateSerializer(DjoserUserCreateSerializer):
+    class Meta(DjoserUserCreateSerializer.Meta):
+        model = User
+        fields = DjoserUserCreateSerializer.Meta.fields + (
+            'first_name', 'last_name',
+        )
+
+
 class UserSerializer(DjoserUserSerializer):
     avatar = serializers.ImageField(required=False)
     is_subscribed = serializers.SerializerMethodField()
@@ -45,7 +56,7 @@ class UserSerializer(DjoserUserSerializer):
     class Meta(DjoserUserSerializer.Meta):
         model = User
         fields = DjoserUserSerializer.Meta.fields + (
-            'is_subscribed', 'avatar'
+            'is_subscribed', 'avatar',
         )
         read_only_fields = fields
 
@@ -69,7 +80,7 @@ class TagSerializer(serializers.ModelSerializer):
 class RecipeShortSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
+        fields = ('id', 'name', 'image', 'cooking_time',)
         read_only_fields = fields
 
 
@@ -90,7 +101,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = (
             'id', 'tags', 'author', 'ingredients', 'is_favorited',
-            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time'
+            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
         )
 
     def _is_recipe_in_relation(self, recipe, model):
@@ -127,7 +138,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = (
             'id', 'name', 'image', 'text', 'cooking_time',
-            'tags_data', 'ingredients_data'
+            'tags_data', 'ingredients_data',
         )
 
     def _validate_no_duplicates(self, ids, model, field_name, error_template):
@@ -215,7 +226,7 @@ class UserWithRecipesSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
         model = User
         fields = UserSerializer.Meta.fields + (
-            'recipes_count', 'recipes'
+            'recipes_count', 'recipes',
         )
         read_only_fields = fields
 
