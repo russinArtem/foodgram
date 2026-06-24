@@ -18,7 +18,6 @@ from api.serializers import (
     RecipeShortSerializer,
     RecipeWriteSerializer,
     TagSerializer,
-    UserSerializer,
     UserWithRecipesSerializer,
 )
 from recipes.models import (
