@@ -213,7 +213,7 @@ class UserAdmin(RecipesCountMixin, BaseUserAdmin):
         'subscribers_count',
         'is_active',
     )
-    list_display_links = ('id', 'username')
+    list_display_links = ('username',)
     list_filter = (
         'is_active',
         'is_staff',
