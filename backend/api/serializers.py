@@ -109,13 +109,13 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
-    tags_data = serializers.PrimaryKeyRelatedField(
+    tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(),
         many=True,
         write_only=True,
         required=True
     )
-    ingredients_data = serializers.ListField(
+    ingredients = serializers.ListField(
         child=IngredientInRecipeSerializer(),
         write_only=True,
         required=True
@@ -127,7 +127,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = (
             'id', 'name', 'image', 'text', 'cooking_time',
-            'tags_data', 'ingredients_data',
+            'tags', 'ingredients',
         )
 
     def _validate_no_duplicates(self, ids, model, field_name, error_template):
@@ -141,29 +141,29 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 {field_name: [error_template.format(list(duplicate_names))]}
             )
 
-    def _validate_tags_and_ingredients(self, tags_data, ingredients_data):
-        if tags_data is None:
+    def _validate_tags_and_ingredients(self, tags, ingredients):
+        if tags is None:
             raise serializers.ValidationError({'tags': ['Обязательное поле.']})
-        if ingredients_data is None:
+        if ingredients is None:
             raise serializers.ValidationError(
                 {'ingredients': ['Обязательное поле.']}
             )
-        if not tags_data:
+        if not tags:
             raise serializers.ValidationError(
                 {'tags': ['Список тегов не может быть пустым.']}
             )
-        if not ingredients_data:
+        if not ingredients:
             raise serializers.ValidationError(
                 {'ingredients': ['Список ингредиентов не может быть пустым.']}
             )
         self._validate_no_duplicates(
-            tags_data,
+            tags,
             Tag,
             'tags',
             'Теги {} повторяются.'
         )
         ingredient_ids = []
-        for ingredient_data in ingredients_data:
+        for ingredient_data in ingredients:
             ingredient_id = ingredient_data.get('id')
             ingredient_ids.append(ingredient_id)
         self._validate_no_duplicates(
@@ -173,7 +173,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             'Ингредиенты {} повторяются.'
         )
 
-    def _save_recipe_ingredients(self, recipe, ingredients_data):
+    def _save_recipe_ingredients(self, recipe, ingredients):
         RecipeIngredient.objects.bulk_create(
             [
                 RecipeIngredient(
@@ -181,27 +181,27 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                     ingredient_id=ingredient_data.get('id'),
                     amount=ingredient_data.get('amount')
                 )
-                for ingredient_data in ingredients_data
+                for ingredient_data in ingredients
             ]
         )
 
     def create(self, validated_data):
-        tags_data = validated_data.pop('tags_data')
-        ingredients_data = validated_data.pop('ingredients_data')
-        self._validate_tags_and_ingredients(tags_data, ingredients_data)
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        self._validate_tags_and_ingredients(tags, ingredients)
         recipe = super().create(validated_data)
-        recipe.tags.set(tags_data)
-        self._save_recipe_ingredients(recipe, ingredients_data)
+        recipe.tags.set(tags)
+        self._save_recipe_ingredients(recipe, ingredients)
         return recipe
 
     def update(self, instance, validated_data):
-        tags_data = validated_data.pop('tags_data', None)
-        ingredients_data = validated_data.pop('ingredients_data', None)
-        self._validate_tags_and_ingredients(tags_data, ingredients_data)
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        self._validate_tags_and_ingredients(tags, ingredients)
         recipe = super().update(instance, validated_data)
-        recipe.tags.set(tags_data)
+        recipe.tags.set(tags)
         recipe.recipe_ingredients.all().delete()
-        self._save_recipe_ingredients(recipe, ingredients_data)
+        self._save_recipe_ingredients(recipe, ingredients)
         return recipe
 
 
