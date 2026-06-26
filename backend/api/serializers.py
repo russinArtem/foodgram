@@ -83,7 +83,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     )
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    image = Base64ImageField()
+    image = serializers.ImageField()
     cooking_time = serializers.IntegerField(min_value=MIN_COOKING_TIME)
 
     class Meta:
