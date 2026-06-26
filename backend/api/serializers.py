@@ -50,12 +50,12 @@ class UserSerializer(DjoserUserSerializer):
         read_only_fields = fields
 
     def get_is_subscribed(self, user):
-        request = self.context.get('request')
+        current_user = getattr(self.context.get('request'), 'user', None)
         return (
-            request
-            and request.user.is_authenticated
+            current_user
+            and current_user.is_authenticated
             and Subscription.objects.filter(
-                user=request.user, author=user
+                user=current_user, author=user
             ).exists()
         )
 
@@ -94,7 +94,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         )
 
     def _is_recipe_in_relation(self, recipe, model):
-        user = self.context.get('request').user
+        user = getattr(self.context.get('request'), 'user', None)
         return (
             user
             and user.is_authenticated
