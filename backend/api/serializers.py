@@ -130,6 +130,12 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             'tags', 'ingredients',
         )
 
+    def to_representation(self, instance):
+        return RecipeReadSerializer(
+            instance,
+            context=self.context
+        ).data
+
     def _validate_no_duplicates(self, ids, model, field_name, error_template):
         if len(ids) != len(set(ids)):
             duplicates = [item for item in ids if ids.count(item) > 1]
