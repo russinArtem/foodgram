@@ -23,6 +23,7 @@ from api.serializers import (
 from recipes.models import (
     Favorite,
     Ingredient,
+    Recipe,
     ShoppingCart,
     Subscription,
     Tag,
@@ -128,6 +129,7 @@ class UserViewSet(DjoserUserViewSet):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    queryset = Recipe.objects.all()
     pagination_class = DefaultPagination
     permission_classes = (AllowAny,)
     filter_backends = (DjangoFilterBackend,)
