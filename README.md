@@ -176,7 +176,9 @@ docker compose -f docker-compose.production.yml exec backend python manage.py im
 ## Автор
 
 Артем Руссин
+
 GitHub: [russinArtem](https://github.com/russinArtem/)
+
 Email: russinartem@yandex.ru
 
 ## Лицензия

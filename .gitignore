@@ -138,7 +138,6 @@ dmypy.json
 static/
 media/
 
-data/
 postman_collection/
 
 frontend/build/
