@@ -17,6 +17,7 @@ oauthlib==3.2.2
 pillow==11.0.0
 psycopg2-binary==2.9.11
 PyJWT==2.10.1
+python-dotenv==1.2.2
 python3-openid==3.2.0
 pytz==2024.2
 PyYAML==6.0.1

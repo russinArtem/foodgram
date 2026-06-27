@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.http import FileResponse
+from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
@@ -8,7 +8,13 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import (
+    SAFE_METHODS,
+    AllowAny,
+    BasePermission,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.response import Response
 
 from api.filters import IngredientFilter, RecipeFilter
@@ -36,6 +42,14 @@ User = get_user_model()
 class DefaultPagination(PageNumberPagination):
     page_size = 6
     page_size_query_param = 'limit'
+
+
+class IsAuthorOrReadOnly(BasePermission):
+    def has_object_permission(self, request, view, instance):
+        return (
+            request.method in SAFE_METHODS
+            or instance.author == request.user
+        )
 
 
 class UserViewSet(DjoserUserViewSet):
@@ -84,7 +98,7 @@ class UserViewSet(DjoserUserViewSet):
         methods=('post', 'delete'),
         permission_classes=(IsAuthenticated,)
     )
-    def subscribe(self, request, pk=None):
+    def subscribe(self, request, id=None):
         user = request.user
         author = self.get_object()
         if request.method == 'DELETE':
@@ -131,9 +145,20 @@ class UserViewSet(DjoserUserViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     pagination_class = DefaultPagination
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+
+    COLLECTION_NAMES = {
+        'ShoppingCart': {
+            'add': 'список покупок',
+            'remove': 'списке покупок'
+        },
+        'Favorite': {
+            'add': 'избранное',
+            'remove': 'избранном'
+        }
+    }
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
@@ -148,7 +173,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    def _add_recipe_to_relation(self, request, pk, model, collection_name):
+    def _add_recipe_to_relation(self, request, pk, model):
         recipe = self.get_object()
         _, created = model.objects.get_or_create(
             user=request.user, recipe=recipe
@@ -157,7 +182,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError(
                 {'detail': (
                     f'Рецепт "{recipe.name}" уже добавлен в '
-                    f'{collection_name}.'
+                    f'{self.COLLECTION_NAMES[model.__name__]["add"]}.'
                 )}
             )
         return Response(
@@ -167,16 +192,23 @@ class RecipeViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED
         )
 
-    def _remove_recipe_from_relation(
-            self, request, pk, model, collection_name
-    ):
-        get_object_or_404(
-            model,
-            user=request.user,
-            recipe_id=pk,
-            message=f'Рецепта нет в {collection_name}.'
-        ).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def _remove_recipe_from_relation(self, request, model, pk=None):
+        try:
+            get_object_or_404(
+                model,
+                user=request.user,
+                recipe_id=pk
+            ).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Http404:
+            if not Recipe.objects.filter(id=pk).exists():
+                raise Http404('Рецепт не найден.')
+            raise serializers.ValidationError(
+                {'detail': (
+                    f'Рецепта нет в '
+                    f'{self.COLLECTION_NAMES[model.__name__]["remove"]}.'
+                )}
+            )
 
     @action(
         detail=True,
@@ -197,13 +229,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def shopping_cart(self, request, pk=None):
         return self._add_recipe_to_relation(
-            request, pk, ShoppingCart, 'список покупок'
+            request, pk, ShoppingCart
         )
 
     @shopping_cart.mapping.delete
     def delete_from_shopping_cart(self, request, pk=None):
         return self._remove_recipe_from_relation(
-            request, pk, ShoppingCart, 'списке покупок'
+            request, ShoppingCart, pk
         )
 
     @action(
@@ -231,13 +263,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, pk=None):
         return self._add_recipe_to_relation(
-            request, pk, Favorite, 'избранное'
+            request, pk, Favorite
         )
 
     @favorite.mapping.delete
     def delete_from_favorite(self, request, pk=None):
         return self._remove_recipe_from_relation(
-            request, pk, Favorite, 'избранном'
+            request, Favorite, pk
         )
 
 

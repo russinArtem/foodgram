@@ -1,6 +1,11 @@
 # flake8: noqa
-import os
 from pathlib import Path
+import os
+
+from dotenv import load_dotenv
+
+
+load_dotenv(override=False)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -130,7 +135,6 @@ DJOSER = {
 
 AUTH_USER_MODEL = 'recipes.User'
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://foodgramartrus.servehttp.com',
-    'https://158.160.227.112',
-]
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    'CSRF_TRUSTED_ORIGINS', 'http://localhost,http://127.0.0.1'
+).split(',')
