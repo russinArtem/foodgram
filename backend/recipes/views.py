@@ -7,6 +7,6 @@ from recipes.models import Recipe
 class RecipeShortLinkRedirectView(RedirectView):
     permanent = False
 
-    def get_redirect_url(self, request, *args, **kwargs):
+    def get_redirect_url(self, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=kwargs['recipe_id'])
-        return request.build_absolute_uri(f'/recipes/{recipe.id}/')
+        return f'/recipes/{recipe.id}/'
