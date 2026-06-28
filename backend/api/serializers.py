@@ -214,14 +214,12 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        tags = validated_data.pop('tags', None)
-        ingredients = validated_data.pop('ingredients', None)
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
         recipe = super().update(instance, validated_data)
-        if tags is not None:
-            recipe.tags.set(tags)
-        if ingredients is not None:
-            recipe.recipe_ingredients.all().delete()
-            self._save_recipe_ingredients(recipe, ingredients)
+        recipe.tags.set(tags)
+        recipe.recipe_ingredients.all().delete()
+        self._save_recipe_ingredients(recipe, ingredients)
         return recipe
 
 
