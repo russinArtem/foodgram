@@ -23,7 +23,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        data_directory = settings.BASE_DIR.parent / 'data'
+        data_directory = settings.BASE_DIR / 'data'
         if options.get('ingredients'):
             self.import_ingredients(data_directory)
         if options.get('tags'):
