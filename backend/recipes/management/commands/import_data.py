@@ -1,6 +1,6 @@
 import json
-import os
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
 
@@ -23,14 +23,11 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        base_dir = os.path.join(os.getcwd(), '..', 'data')
-
+        data_directory = settings.BASE_DIR.parent / 'data'
         if options.get('ingredients'):
-            self.import_ingredients(base_dir)
-
+            self.import_ingredients(data_directory)
         if options.get('tags'):
-            self.import_tags(base_dir)
-
+            self.import_tags(data_directory)
         if not options.get('ingredients') and not options.get('tags'):
             self.stdout.write(
                 self.style.WARNING(
@@ -38,68 +35,68 @@ class Command(BaseCommand):
                 )
             )
 
-    def import_ingredients(self, base_dir):
-        file_path = os.path.join(base_dir, 'ingredients.json')
-        if not os.path.exists(file_path):
+    def import_ingredients(self, data_directory):
+        file_path = data_directory / 'ingredients.json'
+        if not file_path.exists():
             self.stdout.write(
                 self.style.ERROR(f'Файл {file_path} не найден.')
             )
             return
-
-        with open(file_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-
-        created_count = 0
-        for item in data:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            ingredients_data = json.load(file)
+        created_counter = 0
+        for ingredient_item in ingredients_data:
             try:
-                ingredient, created = Ingredient.objects.get_or_create(
-                    name=item['name'],
-                    measurement_unit=item['measurement_unit']
+                ingredient, is_created = Ingredient.objects.get_or_create(
+                    name=ingredient_item['name'],
+                    measurement_unit=ingredient_item['measurement_unit']
                 )
-                if created:
-                    created_count += 1
-            except ValidationError as e:
+                if is_created:
+                    created_counter += 1
+            except ValidationError as error:
                 self.stdout.write(
                     self.style.ERROR(
-                        f'Ошибка при создании ингредиента {item["name"]}: {e}'
+                        (
+                            f'Ошибка при создании ингредиента '
+                            f'{ingredient_item["name"]}: {error}'
+                        )
                     )
                 )
-
         self.stdout.write(
             self.style.SUCCESS(
-                f'Импортировано {created_count} ингредиентов.'
+                f'Импортировано {created_counter} ингредиентов.'
             )
         )
 
-    def import_tags(self, base_dir):
-        file_path = os.path.join(base_dir, 'tags.json')
-        if not os.path.exists(file_path):
+    def import_tags(self, data_directory):
+        file_path = data_directory / 'tags.json'
+        if not file_path.exists():
             self.stdout.write(
                 self.style.ERROR(f'Файл {file_path} не найден.')
             )
             return
-
-        with open(file_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-
-        created_count = 0
-        for item in data:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            tags_data = json.load(file)
+        created_counter = 0
+        for tag_item in tags_data:
             try:
-                tag, created = Tag.objects.get_or_create(
-                    name=item['name'],
-                    slug=item['slug']
+                tag, is_created = Tag.objects.get_or_create(
+                    name=tag_item['name'],
+                    slug=tag_item['slug']
                 )
-                if created:
-                    created_count += 1
-            except ValidationError as e:
+                if is_created:
+                    created_counter += 1
+            except ValidationError as error:
                 self.stdout.write(
                     self.style.ERROR(
-                        f'Ошибка при создании тега {item["name"]}: {e}'
+                        (
+                            f'Ошибка при создании тега '
+                            f'{tag_item["name"]}: {error}'
+                        )
                     )
                 )
-
         self.stdout.write(
             self.style.SUCCESS(
-                f'Импортировано {created_count} тегов.'
+                f'Импортировано {created_counter} тегов.'
             )
         )
