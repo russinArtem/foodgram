@@ -35,9 +35,6 @@
 
 ```
 git clone https://github.com/russinArtem/foodgram.git
-```
-
-```
 cd foodgram
 ```
 
@@ -79,9 +76,6 @@ pip install -r backend/requirements.txt
 
 ```
 cd backend
-```
-
-```
 python3 manage.py migrate
 ```
 
@@ -90,7 +84,8 @@ python3 manage.py createsuperuser
 ```
 
 ```
-python3 manage.py import_data --ingredients --tags
+python3 manage.py import_data --ingredients
+python3 manage.py import_data --tags
 ```
 
 ### 6. Запустите сервер разработки
@@ -112,9 +107,6 @@ python3 manage.py runserver
 
 ```
 git clone https://github.com/russinArtem/foodgram.git
-```
-
-```
 cd foodgram
 ```
 
@@ -153,7 +145,8 @@ docker compose -f docker-compose.production.yml exec backend python manage.py cr
 ```
 
 ```
-docker compose -f docker-compose.production.yml exec backend python manage.py import_data --ingredients --tags
+docker compose -f docker-compose.production.yml exec backend python manage.py import_data --ingredients
+docker compose -f docker-compose.production.yml exec backend python manage.py import_data --tags
 ```
 
 Проект будет доступен по адресам:
@@ -175,11 +168,11 @@ docker compose -f docker-compose.production.yml exec backend python manage.py im
 
 ## Автор
 
-Артем Руссин
+**Артем Руссин**
 
 GitHub: [russinArtem](https://github.com/russinArtem/)
 
-Email: russinartem@yandex.ru
+Email: [russinartem@yandex.ru](mailto:russinartem@yandex.ru)
 
 ## Лицензия
 

@@ -3,7 +3,7 @@ from datetime import datetime
 from django.db.models import Sum
 from django.template.loader import render_to_string
 
-from recipes.models import RecipeIngredient
+from .models import RecipeIngredient
 
 
 def generate_shopping_list(shopping_cart_items):

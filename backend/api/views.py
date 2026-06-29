@@ -9,16 +9,15 @@ from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (
-    SAFE_METHODS,
     AllowAny,
-    BasePermission,
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
 )
 from rest_framework.response import Response
 
-from api.filters import IngredientFilter, RecipeFilter
-from api.serializers import (
+from .filters import IngredientFilter, RecipeFilter
+from .permissions import IsAuthorOrReadOnly
+from .serializers import (
     IngredientSerializer,
     RecipeReadSerializer,
     RecipeShortSerializer,
@@ -42,14 +41,6 @@ User = get_user_model()
 class DefaultPagination(PageNumberPagination):
     page_size = 6
     page_size_query_param = 'limit'
-
-
-class IsAuthorOrReadOnly(BasePermission):
-    def has_object_permission(self, request, view, instance):
-        return (
-            request.method in SAFE_METHODS
-            or instance.author == request.user
-        )
 
 
 class UserViewSet(DjoserUserViewSet):

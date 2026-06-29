@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.views.generic import RedirectView
 
-from recipes.models import Recipe
+from .models import Recipe
 
 
 class RecipeShortLinkRedirectView(RedirectView):

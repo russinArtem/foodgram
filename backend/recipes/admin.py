@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.db import models
 from django.utils.html import mark_safe
 
-from recipes.models import (
+from .models import (
     Ingredient,
     Recipe,
     RecipeIngredient,

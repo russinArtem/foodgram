@@ -1,6 +1,6 @@
 from django.urls import path
 
-from recipes.views import RecipeShortLinkRedirectView
+from .views import RecipeShortLinkRedirectView
 
 app_name = 'recipes'
 
