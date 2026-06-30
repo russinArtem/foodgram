@@ -3,6 +3,9 @@ from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 from django.urls import reverse
 
+MIN_COOKING_TIME = 1
+MIN_INGREDIENT_AMOUNT = 1
+
 
 class User(AbstractUser):
     email = models.EmailField(
@@ -22,7 +25,7 @@ class User(AbstractUser):
                 )
             )
         ],
-        verbose_name='Имя пользователя'
+        verbose_name='Логин'
     )
     first_name = models.CharField(
         max_length=150,
@@ -45,7 +48,7 @@ class User(AbstractUser):
     class Meta:
         verbose_name = 'пользователь'
         verbose_name_plural = 'Пользователи'
-        ordering = ('last_name', 'first_name', 'username')
+        ordering = ('username',)
 
     def __str__(self):
         return self.username[:30]
@@ -60,7 +63,7 @@ class Subscription(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='subscribers'
+        related_name='followers'
     )
 
     class Meta:
@@ -80,7 +83,7 @@ class Subscription(models.Model):
 class Ingredient(models.Model):
     name = models.CharField(
         max_length=128,
-        verbose_name='Название ингредиента',
+        verbose_name='Название',
     )
     measurement_unit = models.CharField(
         max_length=64,
@@ -110,7 +113,7 @@ class Tag(models.Model):
     )
     slug = models.SlugField(
         max_length=32,
-        verbose_name='Слаг',
+        verbose_name='Идентификатор',
         unique=True
     )
 
@@ -131,7 +134,7 @@ class Recipe(models.Model):
     )
     name = models.CharField(
         max_length=256,
-        verbose_name='Название рецепта'
+        verbose_name='Название'
     )
     image = models.ImageField(
         upload_to='recipes/',
@@ -143,7 +146,6 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         Ingredient,
         through='RecipeIngredient',
-        through_fields=('recipe', 'ingredient'),
         verbose_name='Ингредиенты'
     )
     tags = models.ManyToManyField(
@@ -152,7 +154,7 @@ class Recipe(models.Model):
     )
     cooking_time = models.PositiveIntegerField(
         verbose_name='Время приготовления (минуты)',
-        validators=(MinValueValidator(1),)
+        validators=(MinValueValidator(MIN_COOKING_TIME),)
     )
     created = models.DateTimeField(
         auto_now_add=True,
@@ -171,22 +173,24 @@ class Recipe(models.Model):
     def get_absolute_url(self):
         return reverse(
             'recipes:recipe_short_link',
-            kwargs={'recipe_id': self.id}
+            args=[self.id]
         )
 
 
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт'
     )
     ingredient = models.ForeignKey(
         Ingredient,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        verbose_name='Ингредиент'
     )
     amount = models.PositiveIntegerField(
         verbose_name='Количество',
-        validators=(MinValueValidator(1),)
+        validators=(MinValueValidator(MIN_INGREDIENT_AMOUNT),)
     )
 
     class Meta:
@@ -211,10 +215,12 @@ class BaseUserRecipeRelation(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        verbose_name='Пользователь'
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
+        verbose_name='Рецепт'
     )
 
     class Meta:
@@ -225,13 +231,16 @@ class BaseUserRecipeRelation(models.Model):
                 name='%(class)s_unique_relation'
             )
         ]
+        default_related_name = '%(class)ss'
 
 
 class Favorite(BaseUserRecipeRelation):
-    class Meta:
-        default_related_name = 'favorites'
+    class Meta(BaseUserRecipeRelation.Meta):
+        verbose_name = 'избранное'
+        verbose_name_plural = 'Избранное'
 
 
 class ShoppingCart(BaseUserRecipeRelation):
-    class Meta:
-        default_related_name = 'shopping_cart'
+    class Meta(BaseUserRecipeRelation.Meta):
+        verbose_name = 'корзина покупок'
+        verbose_name_plural = 'Корзины покупок'

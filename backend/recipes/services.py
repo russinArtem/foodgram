@@ -8,7 +8,7 @@ from .models import RecipeIngredient
 
 def generate_shopping_list(shopping_cart_items):
     recipe_ids = [item.recipe_id for item in shopping_cart_items]
-    ingredients_data = (
+    ingredients = (
         RecipeIngredient.objects
         .filter(recipe_id__in=recipe_ids)
         .select_related('ingredient')
@@ -16,25 +16,11 @@ def generate_shopping_list(shopping_cart_items):
         .annotate(total_amount=Sum('amount'))
         .order_by('ingredient__name')
     )
-    recipes_info = [
+    return render_to_string(
+        'shopping_list.txt',
         {
-            'name': item.recipe.name,
-            'author': item.recipe.author.username,
-            'tags': [tag.name for tag in item.recipe.tags.all()],
+            'date': datetime.now().strftime('%d.%m.%Y %H:%M'),
+            'ingredients': ingredients,
+            'recipes': shopping_cart_items,
         }
-        for item in shopping_cart_items
-    ]
-    context = {
-        'date': datetime.now().strftime('%d.%m.%Y %H:%M'),
-        'ingredients': [
-            {
-                'index': idx + 1,
-                'name': item['ingredient__name'].capitalize(),
-                'unit': item['ingredient__measurement_unit'],
-                'amount': item['total_amount'],
-            }
-            for idx, item in enumerate(ingredients_data)
-        ],
-        'recipes': recipes_info,
-    }
-    return render_to_string('shopping_list.txt', context)
+    )

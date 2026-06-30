@@ -84,8 +84,8 @@ python3 manage.py createsuperuser
 ```
 
 ```
-python3 manage.py import_data --ingredients
-python3 manage.py import_data --tags
+python3 manage.py import_ingredients
+python3 manage.py import_tags
 ```
 
 ### 6. Запустите сервер разработки
@@ -145,8 +145,8 @@ docker compose -f docker-compose.production.yml exec backend python manage.py cr
 ```
 
 ```
-docker compose -f docker-compose.production.yml exec backend python manage.py import_data --ingredients
-docker compose -f docker-compose.production.yml exec backend python manage.py import_data --tags
+docker compose -f docker-compose.production.yml exec backend python manage.py import_ingredients
+docker compose -f docker-compose.production.yml exec backend python manage.py import_tags
 ```
 
 Проект будет доступен по адресам:

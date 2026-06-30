@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.http import FileResponse, Http404
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
@@ -45,7 +45,6 @@ class DefaultPagination(PageNumberPagination):
 
 class UserViewSet(DjoserUserViewSet):
     pagination_class = DefaultPagination
-    permission_classes = (AllowAny,)
 
     @action(
         detail=False,
@@ -70,13 +69,12 @@ class UserViewSet(DjoserUserViewSet):
                 user.avatar = None
                 user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        image_field = Base64ImageField()
         avatar_data = request.data.get('avatar')
         if not avatar_data:
             raise serializers.ValidationError(
                 {'avatar': ['Это поле обязательно.']}
             )
-        validated_avatar = image_field.to_internal_value(avatar_data)
+        validated_avatar = Base64ImageField().to_internal_value(avatar_data)
         user.avatar = validated_avatar
         user.save()
         return Response(
@@ -91,12 +89,12 @@ class UserViewSet(DjoserUserViewSet):
     )
     def subscribe(self, request, id=None):
         user = request.user
-        author = self.get_object()
         if request.method == 'DELETE':
             get_object_or_404(
-                Subscription, user=user, author=author
+                Subscription, user=user, author_id=id
             ).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+        author = self.get_object()
         if user == author:
             raise serializers.ValidationError(
                 {'detail': 'Нельзя подписаться на самого себя.'}
@@ -121,12 +119,11 @@ class UserViewSet(DjoserUserViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def subscriptions(self, request):
-        user = request.user
-        subscriptions = user.subscriptions.select_related('author')
-        page = self.paginate_queryset(subscriptions)
         return self.get_paginated_response(
             UserWithRecipesSerializer(
-                [sub.author for sub in page],
+                [sub.author for sub in self.paginate_queryset(
+                    request.user.subscriptions.select_related('author')
+                )],
                 many=True,
                 context={'request': request}
             ).data
@@ -139,17 +136,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-
-    COLLECTION_NAMES = {
-        'ShoppingCart': {
-            'add': 'список покупок',
-            'remove': 'списке покупок'
-        },
-        'Favorite': {
-            'add': 'избранное',
-            'remove': 'избранном'
-        }
-    }
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
@@ -173,7 +159,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError(
                 {'detail': (
                     f'Рецепт "{recipe.name}" уже добавлен в '
-                    f'{self.COLLECTION_NAMES[model.__name__]["add"]}.'
+                    f'{model._meta.verbose_name}.'
                 )}
             )
         return Response(
@@ -184,22 +170,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
 
     def _remove_recipe_from_relation(self, request, model, pk=None):
-        try:
-            get_object_or_404(
-                model,
-                user=request.user,
-                recipe_id=pk
-            ).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Http404:
-            if not Recipe.objects.filter(id=pk).exists():
-                raise Http404('Рецепт не найден.')
-            raise serializers.ValidationError(
-                {'detail': (
-                    f'Рецепта нет в '
-                    f'{self.COLLECTION_NAMES[model.__name__]["remove"]}.'
-                )}
-            )
+        get_object_or_404(
+            model,
+            user=request.user,
+            recipe_id=pk
+        ).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=True,
@@ -207,9 +183,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         url_path='get-link'
     )
     def get_short_link(self, request, pk=None):
+        get_object_or_404(Recipe, id=pk)
         return Response(
             {'short-link': request.build_absolute_uri(
-                reverse('recipes:recipe_short_link', kwargs={'recipe_id': pk})
+                reverse('recipes:recipe_short_link', args=[pk])
             )}
         )
 
@@ -235,13 +212,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
-        user = request.user
-        shopping_cart_items = ShoppingCart.objects.filter(
-            user=user
-        ).select_related('recipe')
-        content = generate_shopping_list(shopping_cart_items)
         return FileResponse(
-            content,
+            generate_shopping_list(
+                request.user.shoppingcarts.select_related('recipe')
+            ),
             content_type='text/plain',
             as_attachment=True,
             filename='shopping_list.txt'

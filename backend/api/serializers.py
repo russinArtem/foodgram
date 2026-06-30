@@ -1,10 +1,10 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
 from recipes.models import (
+    MIN_INGREDIENT_AMOUNT,
     Favorite,
     Ingredient,
     Recipe,
@@ -41,7 +41,7 @@ class IngredientInRecipeWriteSerializer(serializers.Serializer):
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all()
     )
-    amount = serializers.IntegerField(validators=[MinValueValidator(1)])
+    amount = serializers.IntegerField(min_value=MIN_INGREDIENT_AMOUNT)
 
 
 class UserSerializer(DjoserUserSerializer):

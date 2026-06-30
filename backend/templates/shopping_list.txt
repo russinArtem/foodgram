@@ -4,12 +4,12 @@
 
 ИНГРЕДИЕНТЫ:
 {% for ingredient in ingredients %}
-{{ ingredient.index }}. {{ ingredient.name }} ({{ ingredient.unit }}) — {{ ingredient.amount }}
+{{ forloop.counter }}. {{ ingredient.ingredient__name|capfirst }} ({{ ingredient.ingredient__measurement_unit }}) — {{ ingredient.total_amount }}
 {% endfor %}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 РЕЦЕПТЫ:
-{% for recipe in recipes %}
-• {{ recipe.name }} (автор: {{ recipe.author }})
-  Теги: {{ recipe.tags|join:", " }}
+{% for item in recipes %}
+• {{ item.recipe.name }} (автор: {{ item.recipe.author.username }})
+  Теги: {{ item.recipe.tags.all|join:", " }}
 {% endfor %}
