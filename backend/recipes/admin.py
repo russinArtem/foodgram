@@ -154,6 +154,7 @@ class RecipeAdmin(admin.ModelAdmin):
                 f'<img src="{recipe.image.url}" '
                 f'width="50" height="50" style="object-fit: cover;" />'
             )
+        return '—'
 
 
 @admin.register(Tag)
@@ -243,6 +244,7 @@ class UserAdmin(RecipesCountMixin, BaseUserAdmin):
                 f'<img src="{user.avatar.url}" '
                 f'width="50" height="50" style="border-radius: 50%;" />'
             )
+        return 'Нет аватара'
 
     @admin.display(description='ФИО')
     def full_name(self, user):
