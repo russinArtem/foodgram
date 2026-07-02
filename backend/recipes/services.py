@@ -6,7 +6,10 @@ from django.template.loader import render_to_string
 from .models import RecipeIngredient
 
 
-def generate_shopping_list(shopping_cart_items):
+def generate_shopping_list(
+    shopping_cart_items,
+    template_name='shopping_list.txt'
+):
     recipe_ids = [item.recipe_id for item in shopping_cart_items]
     ingredients = (
         RecipeIngredient.objects
@@ -17,7 +20,7 @@ def generate_shopping_list(shopping_cart_items):
         .order_by('ingredient__name')
     )
     return render_to_string(
-        'shopping_list.txt',
+        template_name,
         {
             'date': datetime.now().strftime('%d.%m.%Y %H:%M'),
             'ingredients': ingredients,

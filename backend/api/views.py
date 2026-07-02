@@ -183,7 +183,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         url_path='get-link'
     )
     def get_short_link(self, request, pk=None):
-        get_object_or_404(Recipe, id=pk)
+        if not Recipe.objects.filter(id=pk).exists():
+            raise serializers.ValidationError(
+                {'detail': f'Рецепт с id={pk} не найден.'}
+            )
         return Response(
             {'short-link': request.build_absolute_uri(
                 reverse('recipes:recipe_short_link', args=[pk])

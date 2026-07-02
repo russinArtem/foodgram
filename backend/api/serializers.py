@@ -4,6 +4,7 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
 from recipes.models import (
+    MIN_COOKING_TIME,
     MIN_INGREDIENT_AMOUNT,
     Favorite,
     Ingredient,
@@ -93,6 +94,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'id', 'tags', 'author', 'ingredients', 'is_favorited',
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
         )
+        read_only_fields = fields
 
     def _is_recipe_in_relation(self, recipe, model):
         user = getattr(self.context.get('request'), 'user', None)
@@ -122,6 +124,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         required=True
     )
     image = Base64ImageField(required=True)
+    cooking_time = serializers.IntegerField(min_value=MIN_COOKING_TIME)
 
     class Meta:
         model = Recipe
@@ -151,7 +154,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         raise serializers.ValidationError(
             {
                 field_name: [
-                    f'{entity_name} повторяются: {", ".join(duplicate_names)}.'
+                    f'{entity_name} повторяются: {duplicate_names}.'
                 ]
             }
         )

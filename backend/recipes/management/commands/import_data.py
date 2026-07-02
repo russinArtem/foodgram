@@ -9,57 +9,65 @@ from recipes.models import Ingredient, Tag
 
 
 class BaseImportCommand(BaseCommand):
-    """Базовый класс для импорта данных из JSON-фикстур."""
-
     model: Optional[Type[models.Model]] = None
     file_name: Optional[str] = None
-    fixture_name: Optional[str] = None
 
     def handle(self, *args, **options):
+        fixture_name = self.model._meta.verbose_name_plural
         try:
             file_path = settings.BASE_DIR / 'data' / self.file_name
             with open(file_path, 'r', encoding='utf-8') as file:
-                created_count = self.model.objects.bulk_create(
-                    [self.model(**item) for item in json.load(file)],
+                objects_created = self.model.objects.bulk_create(
+                    (self.model(**item) for item in json.load(file)),
                     ignore_conflicts=True
                 )
             self.stdout.write(
                 self.style.SUCCESS(
-                    f'Импортировано {len(created_count)} {self.fixture_name} '
+                    f'Импортировано {len(objects_created)} {fixture_name} '
                     f'из файла {self.file_name}.'
-                )
-            )
-        except FileNotFoundError:
-            self.stdout.write(
-                self.style.ERROR(
-                    f'Файл {self.file_name} не найден в директории data/'
-                )
-            )
-        except json.JSONDecodeError as error:
-            self.stdout.write(
-                self.style.ERROR(
-                    f'Ошибка парсинга JSON в файле {self.file_name}: {error}'
                 )
             )
         except Exception as error:
             self.stdout.write(
                 self.style.ERROR(
-                    f'Ошибка при импорте {self.fixture_name}: {error}'
+                    f'Ошибка при импорте {fixture_name}: {error}'
                 )
             )
 
 
 class CommandImportIngredients(BaseImportCommand):
-    """Команда для импорта ингредиентов."""
-
     model = Ingredient
     file_name = 'ingredients.json'
-    fixture_name = 'ингредиентов'
 
 
 class CommandImportTags(BaseImportCommand):
-    """Команда для импорта тегов."""
-
     model = Tag
     file_name = 'tags.json'
-    fixture_name = 'тегов'
+
+
+class Command(BaseCommand):
+    help = "Импорт ингредиентов и тегов из JSON-файлов"
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--ingredients',
+            action='store_true',
+            help='Импортировать ингредиенты из data/ingredients.json'
+        )
+        parser.add_argument(
+            '--tags',
+            action='store_true',
+            help='Импортировать теги из data/tags.json'
+        )
+
+    def handle(self, *args, **options):
+        if options.get('ingredients'):
+            CommandImportIngredients().handle(*args, **options)
+        if options.get('tags'):
+            CommandImportTags().handle(*args, **options)
+        if not options.get('ingredients') and not options.get('tags'):
+            self.stdout.write(
+                self.style.WARNING(
+                    'Укажите --ingredients или --tags для импорта.'
+                )
+            )

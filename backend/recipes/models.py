@@ -19,10 +19,6 @@ class User(AbstractUser):
         validators=[
             RegexValidator(
                 regex=r'^[\w.@+-]+\Z',
-                message=(
-                    'Недопустимый username. '
-                    'Разрешены буквы, цифры и . @ + - _'
-                )
             )
         ],
         verbose_name='Логин'
@@ -63,7 +59,7 @@ class Subscription(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='followers'
+        related_name='author_subscriptions'
     )
 
     class Meta:
