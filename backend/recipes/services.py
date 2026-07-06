@@ -22,7 +22,7 @@ def generate_shopping_list(
     return render_to_string(
         template_name,
         {
-            'date': datetime.now().strftime('%d %B %Y'),
+            'date': datetime.now(),
             'ingredients': ingredients,
             'recipes': shopping_cart_items,
         }
