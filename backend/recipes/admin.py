@@ -1,6 +1,8 @@
 from django.contrib import admin
+from django.contrib.admin.widgets import AdminFileWidget
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.utils.html import mark_safe
+from django.contrib.auth.models import Group
+from django.utils.html import format_html, mark_safe
 
 from .models import (
     Favorite,
@@ -13,7 +15,20 @@ from .models import (
     User,
 )
 
+admin.site.unregister(Group)
 admin.site.empty_value_display = 'Не задано'
+
+
+class AdminImageWidget(AdminFileWidget):
+    def render(self, name, value, attrs=None, renderer=None):
+        output = []
+        if value and getattr(value, 'url', None):
+            output.append(
+                f'<img src="{value.url}" width="150" '
+                'style="object-fit: cover; margin-bottom: 8px;" />'
+            )
+        output.append(super().render(name, value, attrs, renderer))
+        return mark_safe(''.join(output))
 
 
 class RecipesCountMixin:
@@ -29,80 +44,81 @@ class CookingTimeFilter(admin.SimpleListFilter):
     parameter_name = 'cooking_time'
 
     RANGES = {
-        'fast': {'label': 'Быстрые', 'range': ()},
-        'medium': {'label': 'Средние', 'range': ()},
-        'long': {'label': 'Долгие', 'range': ()},
+        'fast': (),
+        'medium': (),
+        'long': (),
     }
 
     def lookups(self, request, model_admin):
         recipes = model_admin.get_queryset(request)
         distinct_times = recipes.values_list(
             'cooking_time', flat=True
-        ).distinct()
-        if distinct_times.count() < 3:
+        ).distinct().order_by()
+        n = distinct_times.count()
+        if n < 3:
             return ()
-        times_list = sorted(distinct_times)
-        n = len(times_list)
-        threshold1 = times_list[n // 3]
-        threshold2 = times_list[2 * n // 3]
-        self.RANGES['fast']['range'] = (times_list[0], threshold1)
-        self.RANGES['medium']['range'] = (threshold1 + 1, threshold2)
-        self.RANGES['long']['range'] = (threshold2 + 1, times_list[-1])
-        fast_count = recipes.filter(
-            cooking_time__range=self.RANGES['fast']['range']
-        ).count()
-        medium_count = recipes.filter(
-            cooking_time__range=self.RANGES['medium']['range']
-        ).count()
-        long_count = recipes.filter(
-            cooking_time__range=self.RANGES['long']['range']
-        ).count()
-
+        threshold1 = distinct_times[n // 3]
+        threshold2 = distinct_times[2 * n // 3]
+        self.RANGES = {
+            'fast': (distinct_times[0], threshold1),
+            'medium': (threshold1 + 1, threshold2),
+            'long': (threshold2 + 1, distinct_times[n - 1]),
+        }
         return (
-            (
-                'fast',
-                f'{self.RANGES["fast"]["label"]} '
-                f'(до {threshold1} мин) ({fast_count})'
-            ),
-            (
-                'medium',
-                f'{self.RANGES["medium"]["label"]} '
-                f'({threshold1 + 1}-{threshold2} мин) ({medium_count})'
-            ),
-            (
-                'long',
-                f'{self.RANGES["long"]["label"]} '
-                f'(более {threshold2} мин) ({long_count})'
-            ),
+            ('fast', f'Быстрые (до {threshold1} мин)'),
+            ('medium', f'Средние ({threshold1 + 1}-{threshold2} мин)'),
+            ('long', f'Долгие (более {threshold2} мин)'),
         )
 
     def queryset(self, request, recipes):
         value = self.value()
         if value in self.RANGES:
             return recipes.filter(
-                cooking_time__range=self.RANGES[value]['range']
+                cooking_time__range=self.RANGES[value]
             )
         return recipes
 
 
-class IngredientInUseFilter(admin.SimpleListFilter):
-    title = 'Используется в рецептах'
-    parameter_name = 'in_use'
-
+class BaseYesNoFilter(admin.SimpleListFilter):
     LOOKUP_CHOICES = (
         ('yes', 'Да'),
         ('no', 'Нет'),
     )
 
+    related_name = 'recipes'
+
     def lookups(self, request, model_admin):
         return self.LOOKUP_CHOICES
 
-    def queryset(self, request, ingredients):
+    def queryset(self, request, items):
+        lookup = f'{self.related_name}__isnull'
         if self.value() == 'yes':
-            return ingredients.filter(recipes__isnull=False).distinct()
+            return items.filter(**{lookup: False}).distinct()
         if self.value() == 'no':
-            return ingredients.filter(recipes__isnull=True)
-        return ingredients
+            return items.filter(**{lookup: True})
+        return items
+
+
+class RecipesFilter(BaseYesNoFilter):
+    title = 'Рецепты'
+    parameter_name = 'recipes'
+
+
+class SubscriptionsFilter(BaseYesNoFilter):
+    title = 'Подписки'
+    parameter_name = 'subscriptions'
+    related_name = 'subscriptions'
+
+
+class AuthorSubscriptionsFilter(BaseYesNoFilter):
+    title = 'Подписки автора'
+    parameter_name = 'author_subscriptions'
+    related_name = 'author_subscriptions'
+
+
+class IngredientInUseFilter(BaseYesNoFilter):
+    title = 'Используется в рецептах'
+    parameter_name = 'in_use'
 
 
 class RecipeIngredientInline(admin.TabularInline):
@@ -120,7 +136,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'id',
         'short_title',
         'author',
-        'cooking_time',
+        'cooking_time_display',
         'favorites_count',
         'ingredients_display',
         'tags_display',
@@ -139,7 +155,6 @@ class RecipeAdmin(admin.ModelAdmin):
         'favorites_count',
         'ingredients_display',
         'tags_display',
-        'image_preview',
     )
 
     @admin.display(description='Название')
@@ -178,6 +193,15 @@ class RecipeAdmin(admin.ModelAdmin):
             )
         return ''
 
+    @admin.display(description=format_html('Время<br>(мин)'))
+    def cooking_time_display(self, recipe):
+        return recipe.cooking_time
+
+    def get_form(self, request, recipe=None, **kwargs):
+        form = super().get_form(request, recipe, **kwargs)
+        form.base_fields['image'].widget = AdminImageWidget()
+        return form
+
 
 @admin.register(Tag)
 class TagAdmin(RecipesCountMixin, admin.ModelAdmin):
@@ -198,6 +222,13 @@ class IngredientAdmin(RecipesCountMixin, admin.ModelAdmin):
     list_display_links = ('name',)
     search_fields = ('name', 'measurement_unit')
     list_filter = ('measurement_unit', IngredientInUseFilter)
+
+
+@admin.register(RecipeIngredient)
+class RecipeIngredientAdmin(admin.ModelAdmin):
+    list_display = ('id', 'recipe', 'ingredient', 'amount')
+    list_display_links = ('recipe',)
+    search_fields = ('recipe__name', 'ingredient__name')
 
 
 @admin.register(Favorite, ShoppingCart)
@@ -223,13 +254,12 @@ class UserAdmin(RecipesCountMixin, BaseUserAdmin):
     list_filter = (
         'is_active',
         'is_staff',
-        ('recipes', admin.EmptyFieldListFilter),
-        ('subscriptions', admin.EmptyFieldListFilter),
-        ('author_subscriptions', admin.EmptyFieldListFilter),
+        RecipesFilter,
+        SubscriptionsFilter,
+        AuthorSubscriptionsFilter,
     )
     search_fields = ('username', 'email', 'first_name', 'last_name')
     readonly_fields = (
-        'avatar_preview',
         'recipes_count',
         'subscriptions_count',
         'author_subscriptions_count',
@@ -237,7 +267,7 @@ class UserAdmin(RecipesCountMixin, BaseUserAdmin):
     fieldsets = BaseUserAdmin.fieldsets + (
         ('Дополнительная информация', {
             'fields': (
-                'avatar_preview',
+                'avatar',
                 'recipes_count',
                 'subscriptions_count',
                 'author_subscriptions_count',
@@ -266,6 +296,11 @@ class UserAdmin(RecipesCountMixin, BaseUserAdmin):
     @admin.display(description='Подписчиков')
     def author_subscriptions_count(self, user):
         return user.author_subscriptions.count()
+
+    def get_form(self, request, user=None, **kwargs):
+        form = super().get_form(request, user, **kwargs)
+        form.base_fields['avatar'].widget = AdminImageWidget()
+        return form
 
 
 @admin.register(Subscription)

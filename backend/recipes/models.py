@@ -54,11 +54,13 @@ class Subscription(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        verbose_name='Подписки подписчика',
         related_name='subscriptions'
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
+        verbose_name='Подписки автора',
         related_name='author_subscriptions'
     )
 
@@ -149,7 +151,7 @@ class Recipe(models.Model):
         verbose_name='Теги'
     )
     cooking_time = models.PositiveIntegerField(
-        verbose_name='Время приготовления (минуты)',
+        verbose_name='Время (мин)',
         validators=(MinValueValidator(MIN_COOKING_TIME),)
     )
     created = models.DateTimeField(
