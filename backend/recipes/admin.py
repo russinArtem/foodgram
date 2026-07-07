@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.admin.widgets import AdminFileWidget
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
-from django.utils.html import format_html, mark_safe
+from django.utils.html import mark_safe
 
 from .models import (
     Favorite,
@@ -43,26 +43,20 @@ class CookingTimeFilter(admin.SimpleListFilter):
     title = 'Время приготовления'
     parameter_name = 'cooking_time'
 
-    RANGES = {
-        'fast': (),
-        'medium': (),
-        'long': (),
-    }
-
     def lookups(self, request, model_admin):
         recipes = model_admin.get_queryset(request)
         distinct_times = recipes.values_list(
             'cooking_time', flat=True
-        ).distinct().order_by()
+        ).distinct().order_by('cooking_time')
         n = distinct_times.count()
         if n < 3:
             return ()
         threshold1 = distinct_times[n // 3]
         threshold2 = distinct_times[2 * n // 3]
-        self.RANGES = {
+        self.ranges = {
             'fast': (distinct_times[0], threshold1),
             'medium': (threshold1 + 1, threshold2),
-            'long': (threshold2 + 1, distinct_times[n - 1]),
+            'long': (threshold2 + 1, distinct_times.last()),
         }
         return (
             ('fast', f'Быстрые (до {threshold1} мин)'),
@@ -72,9 +66,9 @@ class CookingTimeFilter(admin.SimpleListFilter):
 
     def queryset(self, request, recipes):
         value = self.value()
-        if value in self.RANGES:
+        if hasattr(self, 'ranges') and value in self.ranges:
             return recipes.filter(
-                cooking_time__range=self.RANGES[value]
+                cooking_time__range=self.ranges[value]
             )
         return recipes
 
@@ -193,7 +187,7 @@ class RecipeAdmin(admin.ModelAdmin):
             )
         return ''
 
-    @admin.display(description=format_html('Время<br>(мин)'))
+    @admin.display(description=mark_safe('Время<br>(мин)'))
     def cooking_time_display(self, recipe):
         return recipe.cooking_time
 
