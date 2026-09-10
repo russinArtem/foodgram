@@ -14,7 +14,11 @@
 
 ## Стек технологий
 
-- **Backend:** Python 3.12, Django 5, Django REST Framework, Gunicorn;
+**Backend:**
+![Python](https://img.shields.io/badge/Python_3.12-3776AB?style=flat-square&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django_5-092E20?style=flat-square&logo=django&logoColor=white)
+![DRF](https://img.shields.io/badge/Django_REST_Framework-092E20?style=flat-square&logo=django&logoColor=white)
+![Gunicorn](https://img.shields.io/badge/Gunicorn-499848?style=flat-square&logo=gunicorn&logoColor=white)
 - **База данных:** PostgreSQL;
 - **Аутентификация:** Djoser (DRF Token Authentication);
 - **Фронтенд:** HTML, CSS, JavaScript (React);
