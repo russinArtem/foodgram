@@ -19,15 +19,38 @@
 ![Django](https://img.shields.io/badge/Django_5-092E20?style=flat-square&logo=django&logoColor=white)
 ![DRF](https://img.shields.io/badge/Django_REST_Framework-092E20?style=flat-square&logo=django&logoColor=white)
 ![Gunicorn](https://img.shields.io/badge/Gunicorn-499848?style=flat-square&logo=gunicorn&logoColor=white)
-- **База данных:** PostgreSQL;
-- **Аутентификация:** Djoser (DRF Token Authentication);
-- **Фронтенд:** HTML, CSS, JavaScript (React);
-- **Контейнеризация:** Docker, Docker Compose;
-- **CI/CD:** GitHub Actions;
-- **Веб-сервер:** Nginx;
-- **Документация API:** ReDoc (OpenAPI);
-- **Фильтрация и поиск:** Django Filter;
-- **Обработка изображений:** drf-extra-fields.
+
+**База данных:**
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat-square&logo=postgresql&logoColor=white)
+
+**Аутентификация:**
+![Djoser](https://img.shields.io/badge/Djoser-092E20?style=flat-square&logo=django&logoColor=white)
+
+**Фронтенд:**
+![HTML](https://img.shields.io/badge/HTML-E34F26?style=flat-square&logo=html5&logoColor=white)
+![CSS](https://img.shields.io/badge/CSS-1572B6?style=flat-square&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
+![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
+
+**Контейнеризация:**
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+![Docker Compose](https://img.shields.io/badge/Docker_Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
+
+**CI/CD:**
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=github-actions&logoColor=white)
+
+**Веб-сервер:**
+![Nginx](https://img.shields.io/badge/Nginx-009639?style=flat-square&logo=nginx&logoColor=white)
+
+**Документация API:**
+![OpenAPI](https://img.shields.io/badge/OpenAPI-6BA539?style=flat-square&logo=openapi-initiative&logoColor=white)
+![ReDoc](https://img.shields.io/badge/ReDoc-8A2BE2?style=flat-square&logo=redoc&logoColor=white)
+
+**Фильтрация и поиск:**
+![Django Filter](https://img.shields.io/badge/Django_Filter-092E20?style=flat-square&logo=django&logoColor=white)
+
+**Обработка изображений:**
+![drf-extra-fields](https://img.shields.io/badge/drf--extra--fields-092E20?style=flat-square&logo=django&logoColor=white)
 
 ---
 
