@@ -146,34 +146,34 @@ cd foodgram
 ### 3. Запустите и проверьте контейнеры
 
 ```
-docker compose -f docker-compose.production.yml up -d
+sudo docker compose -f docker-compose.production.yml up -d
 ```
 
 ```
-docker compose -f docker-compose.production.yml ps
+sudo docker compose -f docker-compose.production.yml ps
 ```
 
 ### 4. Соберите и скопируйте статику, примените миграции, создайте суперпользователя и импортируйте данные
 
 ```
-docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
 ```
 
 ```
-docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
+sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
 ```
 
 ```
-docker compose -f docker-compose.production.yml exec backend python manage.py migrate
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
 ```
 
 ```
-docker compose -f docker-compose.production.yml exec backend python manage.py createsuperuser
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py createsuperuser
 ```
 
 ```
-docker compose -f docker-compose.production.yml exec backend python manage.py import_ingredients
-docker compose -f docker-compose.production.yml exec backend python manage.py import_tags
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py import_ingredients
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py import_tags
 ```
 
 Проект будет доступен по адресам:
