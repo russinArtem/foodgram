@@ -1,11 +1,11 @@
-# Foodgram — продуктовый помощник
+# Foodgram - продуктовый помощник
 
 [![Build Status](https://github.com/russinArtem/foodgram/actions/workflows/main.yml/badge.svg)](https://github.com/russinArtem/foodgram/actions/workflows/main.yml)
 [![Python version](https://img.shields.io/badge/python-3.12-blue)](https://www.python.org/downloads/release/python-312/)
 
 ## Описание проекта
 
-**Foodgram** — это сервис для публикации и обмена рецептами. Пользователи могут:
+**Foodgram** —- это сервис для публикации и обмена рецептами. Пользователи могут:
 - регистрироваться и авторизовываться в системе;
 - публиковать свои рецепты с пошаговым описанием и фотографиями;
 - добавлять чужие рецепты в избранное;
